@@ -2,17 +2,12 @@
 import json
 from collections import Iterable, namedtuple, defaultdict
 from copy import deepcopy
+from itertools import groupby
 from logging import getLogger
 from operator import itemgetter
 
-import six
-
-if six.PY2:
-    from itertools import groupby, ifilter as filter, ifilterfalse as filterfalse
-    from repr import repr
-else:
-    from itertools import filterfalse, groupby
-    from reprlib import repr
+from six.moves import filter, filterfalse
+from six.moves.reprlib import repr
 
 _logger = getLogger(__name__)
 
@@ -289,6 +284,7 @@ class OrderSplitter(object):
                如果你需要以上条件的过滤, 可以使用`.apply()`方法调用多次
                Condition(name, startswith(L)).apply(data)
                Condition(age, < 12).apply(data)
+               或者使用full的切分方式
 
             - full
                每次都是用全量数据来运用粒度条件, 最后返回所有数据
@@ -401,4 +397,3 @@ class OrderSplitter(object):
             return next(self.full_apply_to(sigle))
         except StopIteration:
             return None
-

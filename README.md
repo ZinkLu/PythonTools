@@ -7,3 +7,9 @@
 
 further explanation
 
+## 2. [npm_auto_build](npm_auto_build.py)
+
+本质上是一个命令执行工具, 减少运维部署时压力
+
+further explanation
+
