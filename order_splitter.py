@@ -137,7 +137,7 @@ class TrueCondition(BaseCondition):
 
 
 class Condition(BaseCondition):
-    __slots__ = ("field", "condition", "extra", "_get_method")
+    __slots__ = ("field", "condition", "extra", "_get_method", "_not_token", "_real_condition")
 
     def __init__(self, field, condition, get_method=None, **extra):
         """
@@ -161,6 +161,8 @@ class Condition(BaseCondition):
         self.condition = condition
         self.extra = defaultdict(None, **extra)
         self._get_method = get_method or "get"
+        self._not_token = False
+        self._real_condition = None
 
     def __hash__(self):
         return hash((self.field, self.condition))
@@ -173,9 +175,18 @@ class Condition(BaseCondition):
 
     @property
     def real_condition(self):
-        if "(" in self.condition and not self.condition.startswith("."):
-            return ".{condition}".format(field=self.field, condition=self.condition)
-        return "{condition}".format(field=self.field, condition=self.condition)
+        if self._real_condition is not None:
+            return self._real_condition
+
+        condition = self.condition
+        if condition.startswith("not "):
+            self._not_token = True
+            condition = condition.replace("not ", "")
+        if "(" in condition and not condition.startswith("."):
+            self._real_condition = ".{condition}".format(field=self.field, condition=condition)
+        else:
+            self._real_condition = "{condition}".format(field=self.field, condition=condition)
+        return self._real_condition
 
     @property
     def python_expression(self):
@@ -183,7 +194,10 @@ class Condition(BaseCondition):
         返回可以被eval的字符串, 如 x.get("name").startswith("x"), 更加安全的做法应该是判断get出来的对象是否有该方法
         :return:
         """
-        return "{0}.{1}('{2}')".format(self._formal_parameter_name, self._get_method, self.field) + self.real_condition
+        return "({not_flag} {param}.{method}('{field}'))".format(not_flag="not" if self._not_token else "",
+                                                                 param=self._formal_parameter_name,
+                                                                 method=self._get_method,
+                                                                 field=self.field) + self.real_condition
 
 
 class Granularity(BaseCondition):
@@ -391,9 +405,9 @@ class OrderSplitter(object):
         for gra in filter(predicate=lambda x: x.is_apply(single), iterable=self.granularity[:-1]):
             yield gra
 
-    def apply_to(self, sigle):
+    def apply_to(self, single):
         """返回第一个匹配粒度"""
         try:
-            return next(self.full_apply_to(sigle))
+            return next(self.full_apply_to(single))
         except StopIteration:
             return None
