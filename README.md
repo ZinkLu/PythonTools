@@ -13,3 +13,6 @@ further explanation
 
 further explanation
 
+## 3. [unzip_encoded_file_name](unzip_encoded_file_name.py)
+
+压缩包内文件名使用非默认编码导致解压乱码问题
