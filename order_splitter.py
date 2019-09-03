@@ -6,6 +6,7 @@ from itertools import groupby
 from logging import getLogger
 from operator import itemgetter
 
+from six import PY2
 from six.moves import filter, filterfalse
 from six.moves.reprlib import repr
 
@@ -13,11 +14,10 @@ _logger = getLogger(__name__)
 
 
 class DummyDimension(object):
-    __slots__ = ()
+    pass
 
 
 class Dimension(object):
-    __slots__ = ("fields", "_key_value_obj")
 
     def __init__(self, *fields):
         """
@@ -71,8 +71,6 @@ class BaseCondition(object):
 
     is_true_condition = False
 
-    __slots__ = ()
-
     def __hash__(self):
         return hash(True)
 
@@ -114,10 +112,16 @@ class BaseCondition(object):
         :return: Filter(condition), Filter(not condition)
         """
         data1 = data
-        if iter(data) is data:
-            # 这种情况表示data只能被迭代一次, 会产生数据错误, 使用deepcopy处理
-            data1 = deepcopy(data)
-            _logger.warning(u"传入了一个迭代器, 使用deepcopy处理")
+        if PY2:
+            if iter(data) is data:
+                # 这种情况表示data只能被迭代一次, 会产生数据错误
+                data = tuple(data)
+                data1 = data
+                _logger.warning(u"传入了一个迭代器, 转化为tuple")
+        else:
+            if iter(data) is data:
+                data1 = deepcopy(data)
+                _logger.warning(u"传入了一个迭代器, 使用deepcopy处理")
 
         return filter(self.to_key, data), filterfalse(self.to_key, data1)
 
@@ -137,7 +141,6 @@ class TrueCondition(BaseCondition):
 
 
 class Condition(BaseCondition):
-    __slots__ = ("field", "condition", "extra", "_get_method", "_not_token", "_real_condition")
 
     def __init__(self, field, condition, get_method=None, **extra):
         """
@@ -202,7 +205,6 @@ class Condition(BaseCondition):
 
 class Granularity(BaseCondition):
     """condition的集合, 形成粒度条件, 粒度的不同条件之间必须使用`并且(and)`的条件关联, 和Condition有一样的API"""
-    __slots__ = ("conditions", "extra")
 
     def __init__(self, *conditions, **extra):
         """
@@ -280,7 +282,6 @@ class OrderSplitter(object):
         - 这里的 **类型** 就是维度, 订单可以按照多个维度去分组, 而 **商品编码** 是一个粒度, 他可以运用在所有分组中
 
     """
-    __slots__ = ("dimensions", "granularity", "split_mode")
 
     def __init__(self, dimension=None, granularities=None, split_mode="remains"):
         """
