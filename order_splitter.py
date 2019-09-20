@@ -6,11 +6,15 @@ from itertools import groupby
 from logging import getLogger
 from operator import itemgetter
 
-from six import PY2
+from six import PY2, string_types
 from six.moves import filter, filterfalse
 from six.moves.reprlib import repr
 
 _logger = getLogger(__name__)
+
+
+def is_non_string_iterable(obj):
+    return isinstance(obj, Iterable) and (not isinstance(obj, string_types))
 
 
 class DummyDimension(object):
@@ -62,7 +66,7 @@ class Dimension(object):
         """
         _data = self.group(data)
         for values, g in _data:
-            values = values if isinstance(values, Iterable) else (values,)
+            values = values if is_non_string_iterable(values) else (values,)
             yield self._key_value_obj(*values), g
 
 
