@@ -407,7 +407,7 @@ class OrderSplitter(object):
 
     def full_apply_to(self, single):
         """返回单条记录匹配的所有粒度"""
-        for gra in filter(predicate=lambda x: x.is_apply(single), iterable=self.granularity[:-1]):
+        for gra in filter(lambda x: x.is_apply(single), self.granularity[:-1]):
             yield gra
 
     def apply_to(self, single):
