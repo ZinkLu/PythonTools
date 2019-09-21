@@ -23,7 +23,7 @@ class DummyDimension(object):
 
 class Dimension(object):
 
-    def __init__(self, *fields):
+    def __init__(self, *fields, **kwargs):
         """
         :param fields: list[str] 不同维度的group
         >>> data = [{"name": 1, "type": 1}, {"name": 2, "type": 1}, {"name": 3, "type": 2}]
@@ -42,6 +42,11 @@ class Dimension(object):
         """
         self.fields = list(fields)
         self._key_value_obj = namedtuple("dimension", fields)
+
+        if "getter" in kwargs:
+            self.getter = kwargs["getter"]
+        else:
+            self.getter = itemgetter
         object.__init__(self)
 
     def group(self, data):
@@ -52,8 +57,8 @@ class Dimension(object):
         :return: 根据fields分组的数据
         """
         try:
-            sorted_data = sorted(data, key=itemgetter(*self.fields))
-            grouped_data = groupby(sorted_data, itemgetter(*self.fields))
+            sorted_data = sorted(data, key=self.getter(*self.fields))
+            grouped_data = groupby(sorted_data, self.getter(*self.fields))
             return grouped_data
         except KeyError:
             raise KeyError(u"没有找到拆单维度条件")
