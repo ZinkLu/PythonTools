@@ -16,3 +16,7 @@ further explanation
 ## 3. [unzip_encoded_file_name](unzip_encoded_file_name.py)
 
 压缩包内文件名使用非默认编码导致解压乱码问题
+
+## 4. [Collection](_collection.py)
+
+MappingList挺好的, 更加方便的组织数据
