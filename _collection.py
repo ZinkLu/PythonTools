@@ -40,6 +40,7 @@ class MappingList(list):
 
     def __init__(self, *args, **kwargs):
         self._map = OrderedDict()  # _map的value永远是数字, 代表着真正值在self中的index
+        self._trash = empty
         if args:
             raise Exception("The Mapping list only accept keyword args")
         super(MappingList, self).__init__()
@@ -54,6 +55,16 @@ class MappingList(list):
         except KeyError:
             self.key_append(key, default)
             return default
+
+    def trash_setdefault(self, key, default, trash_flag=None):
+        """如果Key是Trash_Flag, 设置Trash并返回, 否则调用setdefault
+        trash 是否会造成循环引用??
+        """
+        if key is trash_flag:
+            if self._trash is empty:
+                self._trash = default
+            return self._trash
+        return self.setdefault(key, default)
 
     def get(self, key, default=None):
         try:
