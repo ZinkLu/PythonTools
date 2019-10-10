@@ -49,6 +49,15 @@ class Dimension(object):
             self.getter = itemgetter
         object.__init__(self)
 
+    def __getstate__(self):
+        return self.fields, self.getter
+
+    def __setstate__(self, state):
+        fields, getter = state
+        self.fields = fields
+        self._key_value_obj = namedtuple("dimension", fields)
+        self.getter = getter
+
     def group(self, data):
         """
         根据不同维度分组
@@ -73,6 +82,11 @@ class Dimension(object):
         for values, g in _data:
             values = values if is_non_string_iterable(values) else (values,)
             yield self._key_value_obj(*values), g
+
+    def add_dimension(self, dim):
+        """添加一个维度"""
+        self.fields.extend(dim)
+        self._key_value_obj = namedtuple("dimension", self.fields)
 
 
 class BaseCondition(object):
@@ -126,11 +140,11 @@ class BaseCondition(object):
                 # 这种情况表示data只能被迭代一次, 会产生数据错误
                 data = tuple(data)
                 data1 = data
-                _logger.warning(u"传入了一个迭代器, 转化为tuple")
+                # _logger.warning(u"传入了一个迭代器, 转化为tuple")
         else:
             if iter(data) is data:
                 data1 = deepcopy(data)
-                _logger.warning(u"传入了一个迭代器, 使用deepcopy处理")
+                # _logger.warning(u"传入了一个迭代器, 使用deepcopy处理")
 
         return filter(self.to_key, data), filterfalse(self.to_key, data1)
 
@@ -328,8 +342,8 @@ class OrderSplitter(object):
             if not isinstance(granularities, Iterable):
                 granularities = [granularities]
 
-        granularities.sort(key=lambda x: len(x))  # 按照粒度大小排序, 并且添加一个True作为最后过滤的条件
-        granularities.append(TrueCondition())
+            granularities.sort(key=lambda x: len(x))  # 按照粒度大小排序, 并且添加一个True作为最后过滤的条件
+            granularities.append(TrueCondition())
         self.granularity = granularities
         self.split_mode = split_mode
 
@@ -395,7 +409,7 @@ class OrderSplitter(object):
         if self.dimensions is None:
             self.dimensions = Dimension(*dim)
             return
-        self.dimensions.fields.extend(dim)
+        self.dimensions.add_dimension(dim)
 
     def add_granularity(self, gra):
         """
