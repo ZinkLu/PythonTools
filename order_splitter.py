@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
-from collections import Iterable, namedtuple, defaultdict
+from collections import namedtuple, defaultdict
 from copy import deepcopy
 from itertools import groupby
 from logging import getLogger
@@ -9,6 +9,11 @@ from operator import itemgetter
 from six import PY2, string_types
 from six.moves import filter, filterfalse
 from six.moves.reprlib import repr
+
+if PY2:
+    from collections import Iterable
+else:
+    from collections.abc import Iterable
 
 _logger = getLogger(__name__)
 
@@ -209,9 +214,11 @@ class Condition(BaseCondition):
             self._not_token = True
             condition = condition.replace("not ", "")
         if "(" in condition and not condition.startswith("."):
-            self._real_condition = ".{condition}".format(field=self.field, condition=condition)
+            self._real_condition = ".{condition}".format(
+                field=self.field, condition=condition)
         else:
-            self._real_condition = "{condition}".format(field=self.field, condition=condition)
+            self._real_condition = "{condition}".format(
+                field=self.field, condition=condition)
         return self._real_condition
 
     @property
@@ -282,13 +289,15 @@ class Granularity(BaseCondition):
     @property
     def real_condition(self):
         """useless"""
-        python_expression_list = [(condition.field, condition.real_condition) for condition in self.conditions]
+        python_expression_list = [
+            (condition.field, condition.real_condition) for condition in self.conditions]
         return python_expression_list
 
     @property
     def python_expression(self):
         """连接所有的condition, condition1 and condition2 and ..., 不可以使用or连接"""
-        python_expression_list = [condition.python_expression for condition in self.conditions]
+        python_expression_list = [
+            condition.python_expression for condition in self.conditions]
         return " and ".join(python_expression_list)
 
 
@@ -342,7 +351,8 @@ class OrderSplitter(object):
             if not isinstance(granularities, Iterable):
                 granularities = [granularities]
 
-            granularities.sort(key=lambda x: len(x))  # 按照粒度大小排序, 并且添加一个True作为最后过滤的条件
+            # 按照粒度大小排序, 并且添加一个True作为最后过滤的条件
+            granularities.sort(key=lambda x: len(x))
             granularities.append(TrueCondition())
         self.granularity = granularities
         self.split_mode = split_mode
