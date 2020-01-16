@@ -20,3 +20,5 @@ further explanation
 ## 4. [Collection](_collection.py)
 
 MappingList挺好的, 更加方便的组织数据
+
+## 5. [excel_slicer](excel_slicer.py)
