@@ -6,7 +6,6 @@ empty = object()
 
 
 class NoEmptyDict(dict):
-
     def __setitem__(self, key, value):
         """如果值是empty就不要设置了"""
         if value is empty:
@@ -22,7 +21,6 @@ class NullDict(dict):
     """
     如果设置了None值作为value, 则自动转化为'null', 方便格式化sql使用
     """
-
     def __setitem__(self, key, value):
         if value is None:
             value = "null"
@@ -37,7 +35,6 @@ class MappingList(list):
     """拥有字典的特性, 但是可以被序列化成列表, 方便数据format;
        mapping list 将无法删除数据,因为列表元素变化则字典内的地址全部混乱
     """
-
     def __init__(self, *args, **kwargs):
         self._map = OrderedDict()  # _map的value永远是数字, 代表着真正值在self中的index
         self._trash = empty
@@ -55,6 +52,9 @@ class MappingList(list):
         except KeyError:
             self.key_append(key, default)
             return default
+
+    def items(self):
+        return zip(self._map.keys(), self)
 
     def trash_setdefault(self, key, default, trash_flag=None):
         """如果Key是Trash_Flag, 设置Trash并返回, 否则调用setdefault
